@@ -1,0 +1,43 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: chromamon-data-ingestion
+  namespace: chroma
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: chromamon-data-ingestion
+  template:
+    metadata:
+      labels:
+        app: chromamon-data-ingestion
+    spec:
+      containers:
+        - name: chromamon-data-ingestion
+          image: paulopossatto/chromamon-data-ingestion:latest
+          ports:
+            - containerPort: 8000
+          env:
+            - name: SPRING_RABBITMQ_HOST
+              value: "rabbitmq"
+            - name: SPRING_RABBITMQ_USERNAME
+              value: "guest"
+            - name: SPRING_RABBITMQ_PASSWORD
+              value: "guest"
+            - name: MONGO_URI
+              value: "mongodb://mongo:27017/chroma_db"
+            - name: RABBITMQ_HOST
+              value: "rabbitmq.chroma.svc.cluster.local"
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: chromamon-data-ingestion
+  namespace: chroma
+spec:
+  ports:
+    - port: 8000
+      targetPort: 8000
+  selector:
+    app: chromamon-data-ingestion

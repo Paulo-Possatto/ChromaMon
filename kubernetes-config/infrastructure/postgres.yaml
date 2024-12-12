@@ -1,0 +1,51 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: postgres-config
+  namespace: chroma
+data:
+  POSTGRES_USER: chroma_user
+  POSTGRES_PASSWORD: chroma_pass
+  POSTGRES_DB: chroma_db
+
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: postgres
+  namespace: chroma
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: postgres
+  template:
+    metadata:
+      labels:
+        app: postgres
+    spec:
+      containers:
+      - name: postgres
+        image: postgres:15
+        ports:
+        - containerPort: 5433
+        envFrom:
+        - configMapRef:
+            name: postgres-config
+        args:
+          - "-p"
+          - "5433"
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: postgres
+  namespace: chroma
+spec:
+  selector:
+    app: postgres
+  ports:
+    - name: postgres
+      protocol: TCP
+      port: 5433
+      targetPort: 5433

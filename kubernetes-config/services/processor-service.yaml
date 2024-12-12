@@ -1,0 +1,59 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: chromamon-data-processing
+  namespace: chroma
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: chromamon-data-processing
+  template:
+    metadata:
+      labels:
+        app: chromamon-data-processing
+    spec:
+      containers:
+        - name: chromamon-data-processing
+          image: paulopossatto/chromamon-data-processing:latest
+          ports:
+            - containerPort: 8001
+          env:
+            - name: SPRING_RABBITMQ_HOST
+              value: "rabbitmq"
+            - name: SPRING_RABBITMQ_USERNAME
+              value: "guest"
+            - name: SPRING_RABBITMQ_PASSWORD
+              value: "guest"
+            - name: MONGO_URI
+              value: "mongodb://mongo:27017/chroma_db"
+            - name: PROCESSING_QUEUE
+              value: "data-processing"
+            - name: POSTGRES_HOST
+              value: "postgres"
+            - name: POSTGRES_PORT
+              value: "5433"
+            - name: POSTGRES_DB
+              value: "chroma_data"
+            - name: POSTGRES_USER
+              valueFrom:
+                secretKeyRef:
+                  name: postgres-secret
+                  key: username
+            - name: POSTGRES_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: postgres-secret
+                  key: password
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: chromamon-data-processing
+  namespace: chroma
+spec:
+  ports:
+    - port: 8001
+      targetPort: 8001
+  selector:
+    app: chromamon-data-processing
